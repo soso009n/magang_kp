@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <script src="/authGuard.js"></script> 
+    
+    <title>Monitoring Tandon Air - History</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* (Semua style CSS Anda dari file profil/tentang) */
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f9ff; }
+        .sidebar-link { transition: all 0.3s ease; }
+        .sidebar-link:hover { background-color: rgba(59, 130, 246, 0.1); }
+        .sidebar-link.active { background-color: #3b82f6; color: white; }
+        
+        /* Style untuk tabel histori Anda */
+        .history-table { width: 100%; border-collapse: collapse; }
+        .history-table th, .history-table td { padding: 12px 16px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+        .history-table th { background-color: #f9fafb; font-weight: 600; color: #374151; }
+        .history-table tr:last-child td { border-bottom: none; }
+        .badge { padding: 4px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+        .badge-green { background-color: #d1fae5; color: #065f46; }
+        .badge-red { background-color: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen bg-gray-100">
+        <div class="w-64 bg-white shadow-md">
+            <div class="p-4 bg-blue-600">
+                <h1 class="text-white text-xl font-bold">Monitoring Tandon</h1>
+            </div>
+            <div class="p-4">
+                <div class="flex items-center mb-6">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzNmODNmOCI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MyLjY3IDAgOCAyLjEzIDggN3MtNS4zMyA3LTggNy04LTIuMTMtOC03IDUuMzMtNyA4LTd6Ii8+PC9zdmc+" alt="Admin" class="w-12 h-12 rounded-full border-2 border-blue-500">
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-700">Selamat Datang,</p>
+                        <p class="text-sm font-bold text-gray-900">Admin</p>
+                    </div>
+                </div>
+                
+                 <nav>
+                    <a href="./dashboard.html" class="sidebar-link flex items-center p-3 mb-2 rounded-lg">
+                        <i class="fas fa-tachometer-alt w-6"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="./history.html" class="sidebar-link active flex items-center p-3 mb-2 rounded-lg"> <i class="fas fa-history w-6"></i>
+                        <span>History</span>
+                    </a>
+                    <a href="./tentang.html" class="sidebar-link flex items-center p-3 mb-2 rounded-lg">
+                        <i class="fas fa-info-circle w-6"></i>
+                        <span>Tentang</span>
+                    </a>
+                    <a href="./profil.html" class="sidebar-link flex items-center p-3 mb-2 rounded-lg">
+                        <i class="fas fa-user w-6"></i>
+                        <span>Profil</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="absolute bottom-0 w-64 p-4 border-t border-gray-200">
+                <button id="logout-button" class="flex items-center text-gray-600 hover:text-gray-900">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto">
+            <header class="bg-white shadow-sm">
+                <div class="flex justify-between items-center px-6 py-4">
+                    <h1 class="text-2xl font-bold text-gray-800">History Log</h1>
+                </div>
+            </header>
+            
+            <div class="p-6">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Log Data Tandon</h2>
+                    <div class="overflow-x-auto">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal & Waktu</th>
+                                    <th>Data Poin</th>
+                                    <th>Nilai</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="./chart.js"></script> <script>
+        // Ambil token (penjaga keamanan)
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username'); // Ambil username juga
+
+        // Penjaga ganda (jika authGuard.js gagal)
+        if (!token) {
+            alert('Anda harus login untuk mengakses halaman ini.');
+            window.location.href = '/login.html';
+        }
+
+        // --- [PERBAIKAN 3] Menambahkan Fungsi Logout ---
+        const logoutButton = document.getElementById('logout-button');
+        logoutButton.addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        });
+
+        // Jalankan fungsi ini saat halaman selesai dimuat
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchHistoryData();
+            // Update username di sidebar
+            if(username) {
+                 document.querySelectorAll('.text-sm.font-bold.text-gray-900').forEach(el => el.textContent = username);
+            }
+        });
+
+        // Ini adalah fungsi fetch Anda yang sudah BENAR
+        async function fetchHistoryData() {
+            const tableBody = document.getElementById('history-table-body');
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4">Memuat data histori...</td></tr>';
+
+            try {
+                // 1. Panggil API backend KITA (dengan token)
+                const response = await fetch('http://localhost:3000/api/history', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token // [PENTING] Kirim token untuk autentikasi
+                    }
+                });
+                
+                if (response.status === 401) {
+                    // Jika token tidak valid / kedaluwarsa
+                    alert('Sesi Anda telah berakhir. Silakan login kembali.');
+                    localStorage.clear();
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('Gagal mengambil data dari server');
+                }
+                
+                const data = await response.json(); // data = [ { topic, value, timestamp }, ... ]
+
+                // Bersihkan tabel
+                tableBody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4">Belum ada data histori.</td></tr>';
+                    return;
+                }
+
+                // 2. Loop data dan masukkan ke tabel
+                data.forEach(record => {
+                    const tr = document.createElement('tr');
+                    tr.classList.add('border-b'); 
+                    
+                    const ts = new Date(record.timestamp);
+                    // Format 'id-ID' untuk Tanggal & Jam Indonesia
+                    const tanggalWaktu = ts.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                    
+                    let dataPoin = record.topic;
+                    let nilai = record.value;
+                    
+                    // Buat lebih mudah dibaca
+                    if (record.topic === 'BBPMP/tandon/level') {
+                        dataPoin = 'Level Air Tandon';
+                        nilai = `${record.value} %`;
+                    } else if (record.topic === 'BBPMP/tandon/pompa') {
+                        dataPoin = 'Status Pompa';
+                        // Beri styling badge
+                        nilai = `<span class="badge ${record.value === 'ON' ? 'badge-green' : 'badge-red'}">${record.value}</span>`;
+                    }
+                    
+                    tr.innerHTML = `
+                        <td class="py-3 px-4">${tanggalWaktu}</td>
+                        <td class="py-3 px-4">${dataPoin}</td>
+                        <td class="py-3 px-4">${nilai}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+
+            } catch (error) {
+                console.error(error);
+                tableBody.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-red-500">${error.message}</td></tr>`;
+            }
+        }
+    </script>
+</body>
+</html>

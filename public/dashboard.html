@@ -1,0 +1,160 @@
+</div>
+    
+    <script src="./chart.js"></script>
+    
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+    <script>
+        // Ambil token dan username dari localStorage
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+
+        // --- 1. Penjaga Keamanan (Auth Guard) ---
+        // (Kita taruh di sini juga untuk keamanan ganda)
+        if (!token) {
+            alert('Anda harus login untuk mengakses halaman ini.');
+            window.location.href = '/login.html';
+        }
+
+        // --- 2. Inisialisasi Elemen UI ---
+        // Asumsi ID 'main-tank-water' adalah untuk div air di tandon utama
+        const mainTankWater = document.getElementById('main-tank-water'); 
+        const mainTankText = mainTankWater.parentElement.querySelector('.text-shadow');
+        
+        // Asumsi ID 'main-tank-toggle' adalah toggle di Tandon Utama
+        const mainTankToggle = document.getElementById('main-tank-toggle'); 
+        const mainTankStatus = document.getElementById('main-tank-status');
+        
+        // Inisialisasi Chart
+        const mainTankChart = initializeChart(); 
+
+        // --- 3. Koneksi ke Backend via Socket.IO ---
+        const socket = io("http://localhost:3000");
+
+        // --- 4. Autentikasi Socket ---
+        socket.on("connect", () => {
+            console.log("✅ Terhubung ke Server Backend (Socket.IO)");
+            // Kirim token kita ke backend untuk verifikasi
+            socket.emit("autentikasi", token);
+        });
+
+        socket.on('autentikasi_berhasil', () => {
+            console.log("🔑 Autentikasi Socket BERHASIL");
+            // Update UI dengan username
+            document.querySelectorAll('.text-sm.font-bold.text-gray-900').forEach(el => el.textContent = username);
+        });
+
+        socket.on('autentikasi_gagal', () => {
+            console.error("🔒 Autentikasi Socket GAGAL. Token tidak valid.");
+            alert("Sesi Anda telah berakhir. Silakan login kembali.");
+            localStorage.clear(); // Hapus token/username yang salah
+            window.location.href = '/login.html';
+        });
+
+        // --- 5. Menerima Data Real-time dari IoT ---
+        socket.on("data-iot", (data) => {
+            // data = { topic: "...", value: "...", timestamp: "..." }
+            
+            const topic = data.topic;
+            const value = data.value;
+
+            if (topic === "BBPMP/tandon/level") {
+                // Update Tampilan Tandon Utama
+                const levelNum = parseFloat(value);
+                mainTankWater.style.height = `${levelNum}%`;
+                mainTankText.textContent = `${value}%`;
+                
+                // Update Chart
+                updateChart(mainTankChart, levelNum);
+                
+                // (Anda bisa tambahkan logika untuk tandon-tandon kecil jika perlu)
+                // Contoh: update "Tandon 1"
+                const tandon1Water = document.querySelector('.tank-container .water.filling'); // Ini contoh, perlu ID spesifik
+                if (tandon1Water) {
+                     tandon1Water.style.height = `${levelNum}%`;
+                     tandon1Water.parentElement.querySelector('.water-level-text').textContent = `${value}%`;
+                }
+
+            } else if (topic === "BBPMP/tandon/pompa") {
+                // Update Tampilan Tombol/Status Pompa
+                const isPompaOn = (value === "ON");
+                mainTankToggle.checked = isPompaOn;
+                
+                if (isPompaOn) {
+                    mainTankStatus.textContent = 'Aktif';
+                    mainTankStatus.classList.remove('text-gray-500');
+                    mainTankStatus.classList.add('text-green-500', 'font-medium');
+                    mainTankWater.classList.add('filling');
+                } else {
+                    mainTankStatus.textContent = 'Mati';
+                    mainTankStatus.classList.remove('text-green-500', 'font-medium');
+                    mainTankStatus.classList.add('text-gray-500');
+                    mainTankWater.classList.remove('filling');
+                }
+            }
+        });
+
+        // --- 6. Mengirim Perintah ke IoT ---
+        mainTankToggle.addEventListener('change', function() {
+            const perintah = this.checked ? "ON" : "OFF";
+            console.log(`Mengirim perintah: ${perintah}`);
+            socket.emit("perintah-iot", perintah);
+            // Status UI akan otomatis update saat ESP32 mengirim balik status barunya
+        });
+
+        // --- 7. Logika Chart (dari file Anda, tapi dibuat jadi fungsi) ---
+        function initializeChart() {
+            if (typeof Chart === 'undefined') return null;
+            
+            const mainTankCtx = document.getElementById('mainTankChart').getContext('2d');
+            const chart = new Chart(mainTankCtx, {
+                type: 'line',
+                data: {
+                    labels: [new Date().toLocaleTimeString()],
+                    datasets: [{
+                        label: 'Level Air (%)',
+                        data: [0], // Mulai dari 0
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 100 }
+                    }
+                }
+            });
+            return chart;
+        }
+
+        // Fungsi untuk update chart secara real-time
+        function updateChart(chart, newValue) {
+            if (!chart) return;
+
+            const data = chart.data.datasets[0].data;
+            const labels = chart.data.labels;
+            
+            // Batasi data di chart (misal: 10 data point terakhir)
+            if (data.length > 10) {
+                data.shift();
+                labels.shift();
+            }
+
+            data.push(newValue);
+            
+            const now = new Date();
+            const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            labels.push(timeString);
+            
+            chart.update();
+        }
+        
+        // (Semua skrip simulasi/dummy Anda yang lama sudah dihapus)
+    </script>
+</body>
+</html>

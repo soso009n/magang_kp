@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TandonTrack - Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; font-weight: bold !important; }
+        .input-field { border-bottom: 1px solid #D1D5DB; transition: border-color 0.3s; background: white !important; border-radius: 10px; }
+        .input-field:focus { outline: none; border-bottom-color: #3B82F6; }
+        .password-container { position: relative; }
+        .toggle-password { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6B7280; }
+        .toggle-password:hover { color: #4B5563; }
+        
+        /* [PERBAIKAN] Aturan global 'button' yang berkonflik telah dihapus dari sini */
+
+        /* [BARU] Style untuk pesan status */
+        #status-message.success { color: #155724; /* Hijau */ }
+        #status-message.error { color: #721c24; /* Merah */ }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center flex-col">
+    <img src="./icon.png" class="w-[150px] h-[150px] object-cover">
+    <div class="bg-[#4FC3F7] rounded-lg shadow-md p-12 w-full max-w-md">
+        <h2 class="text-xl font-medium text-gray-700 mb-6">Register Account</h2>
+        
+        <form id="register-form">
+            <div class="mb-6">
+                <label class="block text-gray-600 mb-2">Username</label>
+                <div class="flex items-center">
+                    <input type="text" id="username" class="input-field w-full py-2 px-3 bg-transparent" placeholder="@username" required>
+                </div>
+            </div>
+            
+            <div class="mb-8">
+                <label class="block text-gray-600 mb-2">Password</label>
+                <div class="password-container">
+                    <input type="password" id="password" class="input-field w-full py-2 px-3 bg-transparent pr-8" placeholder="••••••••••" required>
+                    <span class="toggle-password" id="togglePassword">
+                        <i class="far fa-eye"></i>
+                    </span>
+                </div>
+            </div>
+            
+            <div class="mb-6 text-sm text-right">
+                <span class="text-gray-500">Already have an account?</span>
+                <a href="./login.html" class="text-blue-500 hover:underline">Register</a>
+            </div>
+            
+            <div class="flex justify-between">
+                 <button type="button" id="cancelBtn" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition">
+                    Cancel
+                </button>
+                 <button type="submit" id="register-button" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                    Register
+                </button>
+            </div>
+            
+            <p id="status-message" class="text-center mt-4"></p>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('register-form');
+        const registerButton = document.getElementById('register-button');
+        const statusMessage = document.getElementById('status-message');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault(); // Mencegah form mengirim data cara lama (HTML)
+            
+            const username = usernameInput.value;
+            const password = passwordInput.value;
+
+            // 1. Tampilkan status loading
+            statusMessage.textContent = 'Mendaftarkan...';
+            statusMessage.className = '';
+            registerButton.disabled = true;
+
+            try {
+                // 2. Kirim data ke API Backend
+                const response = await fetch('http://localhost:3000/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // Jika server membalas dengan error (spt: "Username sudah digunakan")
+                    throw new Error(data.message || 'Registrasi gagal');
+                }
+
+                // 3. Tampilkan pesan SUKSES
+                statusMessage.textContent = data.message;
+                statusMessage.className = 'success';
+                registerButton.disabled = false;
+                
+                // Kosongkan form
+                usernameInput.value = '';
+                passwordInput.value = '';
+
+                // Arahkan ke halaman login setelah 2 detik
+                setTimeout(() => {
+                    window.location.href = './login.html';
+                }, 2000);
+
+            } catch (error) {
+                // 4. Tampilkan pesan GAGAL
+                statusMessage.textContent = error.message;
+                statusMessage.className = 'error';
+                registerButton.disabled = false;
+            }
+        });
+        
+        // --- Skrip Tambahan (dari file Anda, tidak berubah) ---
+        document.getElementById('cancelBtn').addEventListener('click', function() {
+            usernameInput.value = '';
+            passwordInput.value = '';
+        });
+
+        const togglePassword = document.getElementById('togglePassword');
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            if (type === 'password') {
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        });
+    </script>
+</body>
+</html>

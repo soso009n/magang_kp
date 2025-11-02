@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TandonTrack - Index</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            font-weight: bold !important;
+        }
+        .input-field {
+            border-bottom: 1px solid #D1D5DB;
+            transition: border-color 0.3s;
+            background: white !important;
+            border-radius: 10px;
+        }
+        .input-field:focus {
+            outline: none;
+            border-bottom-color: #3B82F6;
+        }
+        .password-container {
+            position: relative;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #6B7280;
+        }
+        .toggle-password:hover {
+            color: #4B5563;
+        }
+        
+        /* * Aturan CSS yang berkonflik (a {...} dan button {...}) 
+         * sudah dihapus agar tidak mengganggu Tailwind.
+        */
+        
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center flex-col">
+    <img src="./icon.png" class="w-[200px] h-[200px] object-contain">
+    <div class="rounded-lg p-12 w-full max-w-md" style="margin-top: -70px;">
+            <div class="flex justify-center gap-2">
+                
+                <a 
+                    href="./login.html"
+                    class="w-[150px] px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition text-center"
+                >
+                    Login
+                </a>
+                
+                <a 
+                    href="./register.html" 
+                    class="w-[150px] px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-center"
+                >
+                    Register
+                </a>
+            </div>
+        </div>
+</body>
+</html>
