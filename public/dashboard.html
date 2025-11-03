@@ -1,160 +1,746 @@
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <script src="./chart.js"></script>
-    
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="/authGuard.js"></script> 
+    <script src="/socket.io/socket.io.js"></script>
 
+    <title>Monitoring Tandon Air - Dashboard</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Impor Font Poppins */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        /* === CSS KUSTOM (KONSISTEN DENGAN HALAMAN LAIN) === */
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f7f6;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .sidebar-link {
+            transition: all 0.3s ease;
+            color: #4b5563;
+            border-radius: 8px;
+        }
+        
+        .sidebar-link:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+            color: #2563eb;
+            transform: translateX(4px);
+        }
+        
+        .sidebar-link.active {
+            background-color: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 10px -1px rgba(59, 130, 246, 0.3), 0 2px 6px -2px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Styling Kartu */
+        .card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.07);
+        }
+        
+        /* Tandon Air */
+        .tank-container {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            border: 3px solid #9ca3af;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #f3f4f6;
+        }
+        
+        .water {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(180deg, #60a5fa, #2563eb);
+            transition: height 1s ease-in-out;
+        }
+        
+        .water-level-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 700;
+            color: white;
+            font-size: 1.125rem;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Indikator Status */
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+        .status-indicator.ping {
+            animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+        @keyframes ping {
+            75%, 100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .notification-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background-color: #ef4444;
+            border-radius: 50%;
+        }
+        
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider { background-color: #10b981; }
+        input:checked + .toggle-slider:before { transform: translateX(26px); }
+        
+        /* Animasi Gelombang Air */
+        @keyframes waterFlow {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+            100% { transform: translateY(0); }
+        }
+        .water.filling::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            animation: waterFlow 2s infinite ease-in-out;
+        }
+        .water.filling::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            animation: waterFlow 2.5s infinite ease-in-out;
+            animation-delay: 1s;
+        }
+        
+        /* Animasi Air Jatuh */
+        @keyframes dropFall {
+            0% { transform: translateY(-10px); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(30px); opacity: 0; }
+        }
+        .water-drop {
+            position: absolute; width: 8px; height: 8px;
+            background-color: #60a5fa;
+            border-radius: 50%;
+            animation: dropFall 1.5s infinite;
+        }
+        .water-drop:nth-child(1) { left: 20%; animation-delay: 0s; }
+        .water-drop:nth-child(2) { left: 50%; animation-delay: 0.5s; }
+        .water-drop:nth-child(3) { left: 80%; animation-delay: 1s; }
+        
+        /* Gelembung */
+        @keyframes bubbleRise {
+            0% { transform: translateY(0) scale(1); opacity: 0.7; }
+            100% { transform: translateY(-20px) scale(1.5); opacity: 0; }
+        }
+        .bubble {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: bubbleRise 3s infinite;
+        }
+        .bubble-1 { width: 6px; height: 6px; left: 20%; bottom: 10%; animation-delay: 0s; }
+        .bubble-2 { width: 8px; height: 8px; left: 40%; bottom: 20%; animation-delay: 0.5s; }
+    </style>
+
+    <style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]{display:none}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.inset-0{inset:0px}.bottom-0{bottom:0px}.left-0{left:0px}.right-0{right:0px}.right-full{right:100%}.top-0{top:0px}.z-10{z-index:10}.mb-2{margin-bottom:0.5rem}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.ml-2{margin-left:0.5rem}.ml-3{margin-left:0.75rem}.mr-1{margin-right:0.25rem}.mr-2{margin-right:0.5rem}.mr-3{margin-right:0.75rem}.mr-4{margin-right:1rem}.mt-1{margin-top:0.25rem}.mt-4{margin-top:1rem}.mt-6{margin-top:1.5rem}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-0\.5{height:0.125rem}.h-10{height:2.5rem}.h-12{height:3rem}.h-64{height:16rem}.h-8{height:2rem}.h-screen{height:100vh}.w-12{width:3rem}.w-48{width:12rem}.w-6{width:1.5rem}.w-64{width:16rem}.w-8{width:2rem}.w-full{width:100%}.flex-1{flex:1 1 0%}.flex-shrink-0{flex-shrink:0}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.flex-col{flex-direction:column}.items-start{align-items:flex-start}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-6{gap:1.5rem}.space-x-2 > :not([hidden]) ~ :not([hidden]){--tw-space-x-reverse:0;margin-right:calc(0.5rem * var(--tw-space-x-reverse));margin-left:calc(0.5rem * calc(1 - var(--tw-space-x-reverse)))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.overflow-y-auto{overflow-y:auto}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-md{border-radius:0.375rem}.rounded-xl{border-radius:0.75rem}.border-2{border-width:2px}.border-4{border-width:4px}.border-t{border-top-width:1px}.border-blue-500{--tw-border-opacity:1;border-color:rgb(59 130 246 / var(--tw-border-opacity, 1))}.border-gray-200{--tw-border-opacity:1;border-color:rgb(229 231 235 / var(--tw-border-opacity, 1))}.border-gray-700{--tw-border-opacity:1;border-color:rgb(55 65 81 / var(--tw-border-opacity, 1))}.bg-blue-50{--tw-bg-opacity:1;background-color:rgb(239 246 255 / var(--tw-bg-opacity, 1))}.bg-blue-100{--tw-bg-opacity:1;background-color:rgb(219 234 254 / var(--tw-bg-opacity, 1))}.bg-blue-500{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.bg-blue-600{--tw-bg-opacity:1;background-color:rgb(37 99 235 / var(--tw-bg-opacity, 1))}.bg-cyan-500{--tw-bg-opacity:1;background-color:rgb(6 182 212 / var(--tw-bg-opacity, 1))}.bg-gray-100{--tw-bg-opacity:1;background-color:rgb(243 244 246 / var(--tw-bg-opacity, 1))}.bg-gray-500{--tw-bg-opacity:1;background-color:rgb(107 114 128 / var(--tw-bg-opacity, 1))}.bg-green-50{--tw-bg-opacity:1;background-color:rgb(240 253 244 / var(--tw-bg-opacity, 1))}.bg-green-100{--tw-bg-opacity:1;background-color:rgb(220 252 231 / var(--tw-bg-opacity, 1))}.bg-green-500{--tw-bg-opacity:1;background-color:rgb(34 197 94 / var(--tw-bg-opacity, 1))}.bg-red-50{--tw-bg-opacity:1;background-color:rgb(254 242 242 / var(--tw-bg-opacity, 1))}.bg-red-100{--tw-bg-opacity:1;background-color:rgb(254 226 226 / var(--tw-bg-opacity, 1))}.bg-red-500{--tw-bg-opacity:1;background-color:rgb(239 68 68 / var(--tw-bg-opacity, 1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-yellow-50{--tw-bg-opacity:1;background-color:rgb(254 252 232 / var(--tw-bg-opacity, 1))}.bg-yellow-100{--tw-bg-opacity:1;background-color:rgb(254 249 195 / var(--tw-bg-opacity, 1))}.bg-yellow-500{--tw-bg-opacity:1;background-color:rgb(234 179 8 / var(--tw-bg-opacity, 1))}.p-1{padding:0.25rem}.p-2{padding:0.5rem}.p-3{padding:0.75rem}.p-4{padding:1rem}.p-6{padding:1.5rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-4{padding-top:1rem;padding-bottom:1rem}.pt-4{padding-top:1rem}.text-center{text-align:center}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-semibold{font-weight:600}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246 / var(--tw-text-opacity, 1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235 / var(--tw-text-opacity, 1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128 / var(--tw-text-opacity, 1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99 / var(--tw-text-opacity, 1))}.text-gray-700{--tw-text-opacity:1;color:rgb(55 65 81 / var(--tw-text-opacity, 1))}.text-gray-800{--tw-text-opacity:1;color:rgb(31 41 55 / var(--tw-text-opacity, 1))}.text-gray-900{--tw-text-opacity:1;color:rgb(17 24 39 / var(--tw-text-opacity, 1))}.text-green-500{--tw-text-opacity:1;color:rgb(34 197 94 / var(--tw-text-opacity, 1))}.text-green-600{--tw-text-opacity:1;color:rgb(22 163 74 / var(--tw-text-opacity, 1))}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68 / var(--tw-text-opacity, 1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-yellow-500{--tw-text-opacity:1;color:rgb(234 179 8 / var(--tw-text-opacity, 1))}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.transition-colors{transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.hover\:bg-blue-600:hover{--tw-bg-opacity:1;background-color:rgb(37 99 235 / var(--tw-bg-opacity, 1))}.hover\:bg-gray-100:hover{--tw-bg-opacity:1;background-color:rgb(243 244 246 / var(--tw-bg-opacity, 1))}.hover\:bg-gray-200:hover{--tw-bg-opacity:1;background-color:rgb(229 231 235 / var(--tw-bg-opacity, 1))}.hover\:text-gray-900:hover{--tw-text-opacity:1;color:rgb(17 24 39 / var(--tw-text-opacity, 1))}@media (min-width: 768px){.md\:mb-0{margin-bottom:0px}.md\:w-1\/3{width:33.333333%}.md\:w-2\/3{width:66.666667%}.md\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.md\:flex-row{flex-direction:row}.md\:items-center{align-items:center}}@media (min-width: 1024px){.lg\:grid-cols-4{grid-template-columns:repeat(4, minmax(0, 1fr))}}</style>
+
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen">
+        <div class="w-64 sidebar flex-shrink-0">
+            <div class="p-4 bg-blue-600 flex items-center justify-between">
+                <h1 class="text-white text-xl font-bold">Monitoring Tandon</h1>
+            </div>
+            <div class="p-4">
+                <div class="flex items-center mb-6">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzNmODNmOCI+PHBhdGggZD0iTTEyIDJDNi44MiAyIDIgNi44MiAyIDEyczQuODIgMTAgMTAgMTAgMTAtNC44MiAxMC0xMFMxNy4xOCAyIDEyIDJ6bTAgMThjLTQuNDEgMC04LTMuNTktOC04czMuNTktOCA4IDggOCA0IDggOHoiLz48cGF0aCBkPSJtMTIgNmEzIDMgMCAxIDAgMCA2IDMgMyAwIDAgMCAwLTZ6bTAtMmMxLjY2IDAgMyAxLjM0IDMgM3MtMS4zNCAzLTMgMy0zLTEuMzQtMy0zIDEuMzQtMyAzLTN6Ii8+PC9zdmc+" alt="Admin" class="w-12 h-12 rounded-full border-2 border-blue-500 p-1">
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-700">Selamat Datang,</p>
+                        <p class="text-sm font-bold text-gray-900" id="sidebar-username">Admin</p>
+                    </div>
+                </div>
+                
+                <nav>
+                    <a href="./dashboard.html" class="sidebar-link active flex items-center p-3 mb-2">
+                        <i class="fas fa-tachometer-alt w-6 text-center"></i>
+                        <span class="ml-3">Dashboard</span>
+                    </a>
+                    <a href="./history.html" class="sidebar-link flex items-center p-3 mb-2">
+                        <i class="fas fa-history w-6 text-center"></i>
+                        <span class="ml-3">History</span>
+                    </a>
+                    <a href="./tentang.html" class="sidebar-link flex items-center p-3 mb-2">
+                        <i class="fas fa-info-circle w-6 text-center"></i>
+                        <span class="ml-3">Tentang</span>
+                    </a>
+                    <a href="./profil.html" class="sidebar-link flex items-center p-3 mb-2">
+                        <i class="fas fa-user w-6 text-center"></i>
+                        <span class="ml-3">Profil</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="absolute bottom-0 w-64 p-4 border-t border-gray-200">
+                <button id="logout-button" class="sidebar-link flex items-center p-3 w-full">
+                    <i class="fas fa-sign-out-alt mr-3 w-6 text-center"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto">
+            <header class="bg-white shadow-sm sticky top-0 z-10">
+                <div class="flex justify-between items-center px-6 py-4">
+                    <h1 class="text-2xl font-bold text-gray-800" id="page-title">Dashboard</h1>
+                    
+                    <div class="flex items-center">
+                        <div class="relative mr-4">
+                            <i class="fas fa-bell text-gray-500 text-xl cursor-pointer"></i>
+                            <span class="notification-dot" id="notification-bell" style="display: none;"></span>
+                        </div>
+                        <div class="flex items-center">
+                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzNmODNmOCI+PHBhdGggZD0iTTEyIDJDNi44MiAyIDIgNi44MiAyIDEyczQuODIgMTAgMTAgMTAgMTAtNC44MiAxMC0xMFMxNy4xOCAyIDEyIDJ6bTAgMThjLTQuNDEgMC04LTMuNTktOC04czMuNTktOCA4IDggOCA0IDggOHoiLz48cGF0aCBkPSJtMTIgNmEzIDMgMCAxIDAgMCA2IDMgMyAwIDAgMCAwLTZ6bTAtMmMxLjY2IDAgMyAxLjM0IDMgM3MtMS4zNCAzLTMgMy0zLTEuMzQtMy0zIDEuMzQtMyAzLTN6Ii8+PC9zdmc+" alt="Admin" class="w-8 h-8 rounded-full">
+                            <span class="ml-2 text-sm font-medium text-gray-700" id="header-username">Admin</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="p-6">
+                <div id="dashboard-section" class="section">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div id="status-sistem-card" class="card card-stat p-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm text-gray-500">Status Tandon</p>
+                                    <h3 class="text-3xl font-bold text-gray-600" id="status-tandon-text">Menunggu...</h3>
+                                    <p class="text-xs text-gray-500" id="status-tandon-desc">Menunggu data dari sensor...</p>
+                                </div>
+                                <div class="bg-gray-500 p-3 rounded-xl shadow-lg" id="status-tandon-icon-bg">
+                                    <i class="fas fa-clock text-white text-xl" id="status-tandon-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card card-stat p-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm text-gray-500">Status Pompa</p>
+                                    <h3 class="text-3xl font-bold text-gray-600" id="pompa-status-text">Menunggu...</h3>
+                                    <p class="text-xs text-gray-500">Data dari relay</p>
+                                </div>
+                                <div class="bg-gray-500 p-3 rounded-xl shadow-lg" id="pompa-status-icon-bg">
+                                    <i class="fas fa-power-off text-white text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card card-stat p-4">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm text-gray-500">Koneksi Sistem</p>
+                                    <h3 class="text-3xl font-bold text-red-600" id="koneksi-status-text">Terputus</h3>
+                                    <p class="text-xs text-gray-500" id="koneksi-status-desc">Menyambungkan ke server...</p>
+                                </div>
+                                <div class="bg-red-500 p-3 rounded-xl shadow-lg" id="koneksi-status-icon-bg">
+                                    <i class="fas fa-wifi text-white text-xl" id="koneksi-status-icon"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6 mb-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800">Monitoring Tandon BBPMP</h3>
+                        <div class="flex flex-col md:flex-row">
+                            <div class="w-full md:w-1/3 flex justify-center items-center mb-6 md:mb-0">
+                                <div class="relative w-48 h-64 border-4 border-gray-700 rounded-lg overflow-hidden">
+                                    <div class="absolute bottom-0 w-full" id="tank-water" style="height: 0%; background: linear-gradient(180deg, #60a5fa, #2563eb);">
+                                        <div class="bubble bubble-1"></div>
+                                        <div class="bubble bubble-2"></div>
+                                    </div>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <span class="text-3xl font-bold text-white" style="text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);" id="tank-percentage">0%</span>
+                                    </div>
+                                    <div class="absolute left-0 right-0 h-0.5 bg-gray-300" style="top: 25%;"><span class="absolute right-full mr-2 text-xs text-gray-500">75%</span></div>
+                                    <div class="absolute left-0 right-0 h-0.5 bg-gray-300" style="top: 50%;"><span class="absolute right-full mr-2 text-xs text-gray-500">50%</span></div>
+                                    <div class="absolute left-0 right-0 h-0.5 bg-gray-300" style="top: 75%;"><span class="absolute right-full mr-2 text-xs text-gray-500">25%</span></div>
+                                    
+                                    <div class="absolute top-0 left-0 right-0 h-10" id="tank-drops" style="display: none;">
+                                        <div class="water-drop"></div>
+                                        <div class="water-drop"></div>
+                                        <div class="water-drop"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full md:w-2/3">
+                                <div class="chart-container">
+                                    <canvas id="mainTankChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-col md:flex-row justify-between text-sm text-gray-700">
+                            <div>
+                                <span class="font-medium text-gray-900">Kapasitas:</span> 1000 Liter (Estimasi)
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-900">Terisi:</span> <span id="tank-volume">0</span> Liter
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-900">Update Terakhir:</span> <span id="last-update">Menunggu...</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 pt-4 border-t border-gray-200">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between">
+                                <div class="flex items-center mb-4 md:mb-0">
+                                    <span class="mr-3 font-medium text-gray-700">Kontrol Pompa Manual:</span>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="pompa-toggle">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <span id="pompa-status-text-control" class="ml-2 text-gray-500 font-medium">Mati</span>
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    Otomasi Lokal: <strong class="text-gray-700">ON &le; 25%</strong>, <strong class="text-gray-700">OFF &ge; 75%</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-800">Notifikasi Real-time</h3>
+                        <div class="space-y-3" id="notification-list">
+                            <div class="flex items-start p-3 bg-green-50 rounded-lg">
+                                <div class="flex-shrink-0 bg-green-100 p-2 rounded-full mr-3">
+                                    <i class="fas fa-check-circle text-green-500"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium">Sistem Online</p>
+                                    <p class="text-sm text-gray-600">Dashboard monitoring berhasil dimuat.</p>
+                                    <p class="text-xs text-gray-500 mt-1" id="initial-timestamp">Baru saja</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script>
-        // Ambil token dan username dari localStorage
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        // === 1. AMBIL KREDENSIAL DARI LOCALSTORAGE ===
         const token = localStorage.getItem('token');
         const username = localStorage.getItem('username');
+        // (authGuard.js sudah berjalan, jadi kita bisa asumsikan token ada)
 
-        // --- 1. Penjaga Keamanan (Auth Guard) ---
-        // (Kita taruh di sini juga untuk keamanan ganda)
-        if (!token) {
-            alert('Anda harus login untuk mengakses halaman ini.');
+        // === 2. INISIALISASI KONEKSI SOCKET.IO ===
+        const socket = io({
+            auth: {
+                token: token // Mengirim token saat koneksi
+            }
+        });
+
+        // === 3. REFERENSI ELEMEN DOM ===
+        const sidebarUsername = document.getElementById('sidebar-username');
+        const headerUsername = document.getElementById('header-username');
+        const logoutButton = document.getElementById('logout-button');
+        
+        // Kartu Status Atas
+        const statusTandonText = document.getElementById('status-tandon-text');
+        const statusTandonDesc = document.getElementById('status-tandon-desc');
+        const statusTandonIconBg = document.getElementById('status-tandon-icon-bg');
+        const statusTandonIcon = document.getElementById('status-tandon-icon');
+        
+        const pompaStatusText = document.getElementById('pompa-status-text');
+        const pompaStatusIconBg = document.getElementById('pompa-status-icon-bg');
+
+        const koneksiStatusText = document.getElementById('koneksi-status-text');
+        const koneksiStatusDesc = document.getElementById('koneksi-status-desc');
+        const koneksiStatusIconBg = document.getElementById('koneksi-status-icon-bg');
+        const koneksiStatusIcon = document.getElementById('koneksi-status-icon');
+        
+        // Tandon Utama (Tandon 1)
+        const tankWater = document.getElementById('tank-water');
+        const tankPercentage = document.getElementById('tank-percentage');
+        const tankVolume = document.getElementById('tank-volume');
+        const tankDrops = document.getElementById('tank-drops');
+        const lastUpdate = document.getElementById('last-update');
+        
+        // Kontrol Pompa
+        const pompaToggle = document.getElementById('pompa-toggle');
+        const pompaStatusTextControl = document.getElementById('pompa-status-text-control');
+        
+        // Notifikasi
+        const notificationList = document.getElementById('notification-list');
+        const notificationBell = document.getElementById('notification-bell');
+        
+        // Chart
+        const mainTankCtx = document.getElementById('mainTankChart').getContext('2d');
+        let mainTankChart; // Dideklarasi di sini
+        
+        // Variabel state lokal
+        let lastLevelNotif = null;
+        let lastPompaNotif = null;
+        
+        // Inisialisasi awal
+        document.getElementById('initial-timestamp').textContent = new Date().toLocaleTimeString('id-ID');
+
+        // === 4. FUNGSI UTAMA ===
+
+        // Fungsi Logout
+        function logout() {
+            localStorage.clear();
             window.location.href = '/login.html';
         }
 
-        // --- 2. Inisialisasi Elemen UI ---
-        // Asumsi ID 'main-tank-water' adalah untuk div air di tandon utama
-        const mainTankWater = document.getElementById('main-tank-water'); 
-        const mainTankText = mainTankWater.parentElement.querySelector('.text-shadow');
-        
-        // Asumsi ID 'main-tank-toggle' adalah toggle di Tandon Utama
-        const mainTankToggle = document.getElementById('main-tank-toggle'); 
-        const mainTankStatus = document.getElementById('main-tank-status');
-        
-        // Inisialisasi Chart
-        const mainTankChart = initializeChart(); 
+        // Fungsi Update Nama Pengguna
+        function updateUsername() {
+            if (username) {
+                sidebarUsername.textContent = username;
+                headerUsername.textContent = username;
+            }
+        }
 
-        // --- 3. Koneksi ke Backend via Socket.IO ---
-        const socket = io("http://localhost:3000");
+        // Fungsi Tambah Notifikasi
+        function addNotification(type, title, message) {
+            let iconClass, bgClass, iconBgClass;
+            
+            if (type === 'error') {
+                iconClass = 'fas fa-triangle-exclamation text-red-500';
+                bgClass = 'bg-red-50';
+                iconBgClass = 'bg-red-100';
+            } else if (type === 'warning') {
+                iconClass = 'fas fa-circle-exclamation text-yellow-500';
+                bgClass = 'bg-yellow-50';
+                iconBgClass = 'bg-yellow-100';
+            } else { // info
+                iconClass = 'fas fa-circle-info text-blue-500';
+                bgClass = 'bg-blue-50';
+                iconBgClass = 'bg-blue-100';
+            }
 
-        // --- 4. Autentikasi Socket ---
-        socket.on("connect", () => {
-            console.log("✅ Terhubung ke Server Backend (Socket.IO)");
-            // Kirim token kita ke backend untuk verifikasi
-            socket.emit("autentikasi", token);
+            const notifHTML = `
+            <div class="flex items-start p-3 ${bgClass} rounded-lg" style="opacity: 0; transform: translateY(10px); transition: all 0.5s ease;">
+                <div class="flex-shrink-0 ${iconBgClass} p-2 rounded-full mr-3">
+                    <i class="${iconClass}"></i>
+                </div>
+                <div>
+                    <p class="font-medium">${title}</p>
+                    <p class="text-sm text-gray-600">${message}</p>
+                    <p class="text-xs text-gray-500 mt-1">${new Date().toLocaleTimeString('id-ID')}</p>
+                </div>
+            </div>`;
+            
+            notificationList.insertAdjacentHTML('afterbegin', notifHTML);
+            const newNode = notificationList.firstChild;
+            setTimeout(() => {
+                newNode.style.opacity = '1';
+                newNode.style.transform = 'translateY(0)';
+            }, 10);
+
+            notificationBell.style.display = 'block';
+            if (notificationList.children.length > 5) {
+                notificationList.removeChild(notificationList.lastChild);
+            }
+        }
+        
+        // Fungsi update data Tandon (Level)
+        // [SESUAIKAN DENGAN TOPIK 'BBPMP/tandon/level']
+        function updateTandonLevel(levelStr) {
+            const level = parseFloat(levelStr);
+            if (isNaN(level)) return;
+
+            // Update Tampilan Tandon Besar
+            tankWater.style.height = level + '%';
+            tankPercentage.textContent = Math.round(level) + '%';
+            tankVolume.textContent = Math.round(level * 10); // 1000L * persentase
+            lastUpdate.textContent = new Date().toLocaleTimeString('id-ID');
+
+            // Update Kartu Status Sistem
+            statusTandonIcon.className = 'text-white text-xl'; // Reset ikon
+            if (level <= 25) {
+                statusTandonText.textContent = 'Rendah';
+                statusTandonText.className = 'text-3xl font-bold text-red-600';
+                statusTandonDesc.textContent = `Level air di ${Math.round(level)}%. Perlu diisi.`;
+                statusTandonIconBg.className = 'bg-red-500 p-3 rounded-xl shadow-lg';
+                statusTandonIcon.classList.add('fas', 'fa-triangle-exclamation');
+                
+                if (lastLevelNotif !== 'rendah') {
+                    addNotification('error', 'Level Air Rendah', `Tandon BBPMP mencapai ${Math.round(level)}%.`);
+                    lastLevelNotif = 'rendah';
+                }
+            } else if (level >= 75) { // Sesuai logika otomatisasi ESP32
+                statusTandonText.textContent = 'Penuh';
+                statusTandonText.className = 'text-3xl font-bold text-yellow-500';
+                statusTandonDesc.textContent = `Level air di ${Math.round(level)}%. Pengisian otomatis berhenti.`;
+                statusTandonIconBg.className = 'bg-yellow-500 p-3 rounded-xl shadow-lg';
+                statusTandonIcon.classList.add('fas', 'fa-tint-slash');
+                
+                if (lastLevelNotif !== 'penuh') {
+                    addNotification('warning', 'Level Air Penuh', `Tandon BBPMP mencapai ${Math.round(level)}%.`);
+                    lastLevelNotif = 'penuh';
+                }
+            } else {
+                statusTandonText.textContent = 'Normal';
+                statusTandonText.className = 'text-3xl font-bold text-green-600';
+                statusTandonDesc.textContent = `Level air di ${Math.round(level)}%.`;
+                statusTandonIconBg.className = 'bg-green-500 p-3 rounded-xl shadow-lg';
+                statusTandonIcon.classList.add('fas', 'fa-check-circle');
+                lastLevelNotif = 'normal'; // Reset status notifikasi
+            }
+            
+            // Tambahkan data baru ke chart
+            if (mainTankChart) {
+                mainTankChart.data.labels.push(new Date().toLocaleTimeString('id-ID'));
+                mainTankChart.data.datasets[0].data.push(level);
+                // Hapus data lama jika terlalu banyak
+                if (mainTankChart.data.labels.length > 20) { // Tampilkan 20 data poin terakhir
+                    mainTankChart.data.labels.shift();
+                    mainTankChart.data.datasets[0].data.shift();
+                }
+                mainTankChart.update();
+            }
+        }
+
+        // Fungsi update data Pompa
+        // [SESUAIKAN DENGAN TOPIK 'BBPMP/tandon/pompa']
+        function updatePompaStatus(status) {
+            const isPompaOn = (status === 'ON');
+
+            // Update Kartu Status Pompa
+            pompaStatusText.textContent = isPompaOn ? 'ON (Mengisi)' : 'OFF (Mati)';
+            pompaStatusText.className = isPompaOn ? 'text-3xl font-bold text-green-600' : 'text-3xl font-bold text-gray-600';
+            pompaStatusIconBg.className = isPompaOn ? 'bg-green-500 p-3 rounded-xl shadow-lg' : 'bg-gray-500 p-3 rounded-xl shadow-lg';
+            
+            // Update Kontrol Pompa
+            pompaToggle.checked = isPompaOn;
+            pompaStatusTextControl.textContent = isPompaOn ? 'Aktif' : 'Mati';
+            pompaStatusTextControl.className = isPompaOn ? 'ml-2 text-green-500 font-medium' : 'ml-2 text-gray-500 font-medium';
+
+            // Update animasi tandon
+            if (isPompaOn) {
+                tankWater.classList.add('filling');
+                tankDrops.style.display = 'block';
+            } else {
+                tankWater.classList.remove('filling');
+                tankDrops.style.display = 'none';
+            }
+
+            // Kirim notifikasi HANYA jika status berubah
+            if (lastPompaNotif !== status) {
+                addNotification('info', `Status Pompa Berubah`, `Pompa sekarang ${status}.`);
+                lastPompaNotif = status;
+            }
+        }
+
+        // Fungsi Inisialisasi Chart (data dari Histori)
+        async function loadChartHistory() {
+            try {
+                const response = await fetch('/api/history', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Gagal memuat histori chart');
+                
+                const historyData = await response.json();
+                
+                // Ambil data tandon & pompa terakhir dari histori
+                const lastLevelData = historyData.find(item => item.topic === 'BBPMP/tandon/level');
+                const lastPompaData = historyData.find(item => item.topic === 'BBPMP/tandon/pompa');
+
+                // Filter hanya data level dan balik urutannya (dari lama ke baru)
+                const levelHistory = historyData
+                    .filter(item => item.topic === 'BBPMP/tandon/level')
+                    .reverse();
+
+                const labels = levelHistory.map(item => new Date(item.timestamp).toLocaleTimeString('id-ID'));
+                const data = levelHistory.map(item => parseFloat(item.value));
+
+                // Ambil 20 data terakhir saja
+                const finalLabels = labels.slice(-20);
+                const finalData = data.slice(-20);
+
+                // Update data tandon terakhir berdasarkan histori
+                if (lastLevelData) {
+                    updateTandonLevel(lastLevelData.value);
+                }
+                if (lastPompaData) {
+                    updatePompaStatus(lastPompaData.value);
+                }
+
+                // Inisialisasi Chart
+                mainTankChart = new Chart(mainTankCtx, {
+                    type: 'line',
+                    data: {
+                        labels: finalLabels,
+                        datasets: [{
+                            label: 'Level Air (%)',
+                            data: finalData,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, max: 100, ticks: { callback: value => value + '%' } },
+                            x: { ticks: { autoSkip: true, maxTicksLimit: 7 } }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error(error);
+                addNotification('error', 'Gagal Memuat Grafik', error.message);
+                // Inisialisasi chart kosong jika gagal load
+                mainTankChart = new Chart(mainTankCtx, {
+                    type: 'line',
+                    data: { labels: [], datasets: [] },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+        }
+
+
+        // === 5. SAMBUNGKAN EVENT LISTENERS ===
+        
+        // Tombol Logout
+        logoutButton.addEventListener('click', logout);
+        
+        // Tombol Kontrol Pompa
+        // [SESUAIKAN DENGAN EVENT 'perintah-iot']
+        pompaToggle.addEventListener('change', function() {
+            const perintah = this.checked ? 'ON' : 'OFF';
+            console.log(`Mengirim perintah: ${perintah}`);
+            // Kirim perintah ke server
+            socket.emit('perintah-iot', perintah);
+        });
+
+        // === 6. SAMBUNGKAN LISTENER SOCKET.IO ===
+
+        socket.on('connect', () => {
+            console.log('Socket.IO terhubung!');
+            // Autentikasi socket setelah terhubung [SESUAI DENGAN server.js]
+            socket.emit('autentikasi', token);
         });
 
         socket.on('autentikasi_berhasil', () => {
-            console.log("🔑 Autentikasi Socket BERHASIL");
-            // Update UI dengan username
-            document.querySelectorAll('.text-sm.font-bold.text-gray-900').forEach(el => el.textContent = username);
+            console.log('Socket.IO terautentikasi.');
+            koneksiStatusText.textContent = 'Terhubung';
+            koneksiStatusText.className = 'text-3xl font-bold text-green-600';
+            koneksiStatusDesc.textContent = 'Menerima data real-time...';
+            koneksiStatusIconBg.className = 'bg-green-500 p-3 rounded-xl shadow-lg';
+            koneksiStatusIcon.className = 'fas fa-wifi text-white text-xl';
+            addNotification('info', 'Koneksi Berhasil', 'Terhubung ke server TandonTrack.');
         });
-
+        
         socket.on('autentikasi_gagal', () => {
-            console.error("🔒 Autentikasi Socket GAGAL. Token tidak valid.");
-            alert("Sesi Anda telah berakhir. Silakan login kembali.");
-            localStorage.clear(); // Hapus token/username yang salah
-            window.location.href = '/login.html';
+            console.error('Socket.IO autentikasi gagal!');
+            alert('Koneksi real-time gagal: Token tidak valid. Sesi Anda mungkin telah berakhir.');
+            logout();
         });
 
-        // --- 5. Menerima Data Real-time dari IoT ---
-        socket.on("data-iot", (data) => {
+        // Listener utama untuk data real-time
+        // [SESUAIKAN DENGAN EVENT 'data-iot']
+        socket.on('data-iot', (data) => {
             // data = { topic: "...", value: "...", timestamp: "..." }
             
-            const topic = data.topic;
-            const value = data.value;
-
-            if (topic === "BBPMP/tandon/level") {
-                // Update Tampilan Tandon Utama
-                const levelNum = parseFloat(value);
-                mainTankWater.style.height = `${levelNum}%`;
-                mainTankText.textContent = `${value}%`;
-                
-                // Update Chart
-                updateChart(mainTankChart, levelNum);
-                
-                // (Anda bisa tambahkan logika untuk tandon-tandon kecil jika perlu)
-                // Contoh: update "Tandon 1"
-                const tandon1Water = document.querySelector('.tank-container .water.filling'); // Ini contoh, perlu ID spesifik
-                if (tandon1Water) {
-                     tandon1Water.style.height = `${levelNum}%`;
-                     tandon1Water.parentElement.querySelector('.water-level-text').textContent = `${value}%`;
-                }
-
-            } else if (topic === "BBPMP/tandon/pompa") {
-                // Update Tampilan Tombol/Status Pompa
-                const isPompaOn = (value === "ON");
-                mainTankToggle.checked = isPompaOn;
-                
-                if (isPompaOn) {
-                    mainTankStatus.textContent = 'Aktif';
-                    mainTankStatus.classList.remove('text-gray-500');
-                    mainTankStatus.classList.add('text-green-500', 'font-medium');
-                    mainTankWater.classList.add('filling');
-                } else {
-                    mainTankStatus.textContent = 'Mati';
-                    mainTankStatus.classList.remove('text-green-500', 'font-medium');
-                    mainTankStatus.classList.add('text-gray-500');
-                    mainTankWater.classList.remove('filling');
-                }
+            if (data.topic === 'BBPMP/tandon/level') {
+                updateTandonLevel(data.value);
+            } 
+            else if (data.topic === 'BBPMP/tandon/pompa') {
+                updatePompaStatus(data.value);
             }
         });
-
-        // --- 6. Mengirim Perintah ke IoT ---
-        mainTankToggle.addEventListener('change', function() {
-            const perintah = this.checked ? "ON" : "OFF";
-            console.log(`Mengirim perintah: ${perintah}`);
-            socket.emit("perintah-iot", perintah);
-            // Status UI akan otomatis update saat ESP32 mengirim balik status barunya
-        });
-
-        // --- 7. Logika Chart (dari file Anda, tapi dibuat jadi fungsi) ---
-        function initializeChart() {
-            if (typeof Chart === 'undefined') return null;
-            
-            const mainTankCtx = document.getElementById('mainTankChart').getContext('2d');
-            const chart = new Chart(mainTankCtx, {
-                type: 'line',
-                data: {
-                    labels: [new Date().toLocaleTimeString()],
-                    datasets: [{
-                        label: 'Level Air (%)',
-                        data: [0], // Mulai dari 0
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, max: 100 }
-                    }
-                }
-            });
-            return chart;
-        }
-
-        // Fungsi untuk update chart secara real-time
-        function updateChart(chart, newValue) {
-            if (!chart) return;
-
-            const data = chart.data.datasets[0].data;
-            const labels = chart.data.labels;
-            
-            // Batasi data di chart (misal: 10 data point terakhir)
-            if (data.length > 10) {
-                data.shift();
-                labels.shift();
-            }
-
-            data.push(newValue);
-            
-            const now = new Date();
-            const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-            labels.push(timeString);
-            
-            chart.update();
-        }
         
-        // (Semua skrip simulasi/dummy Anda yang lama sudah dihapus)
+        socket.on('disconnect', () => {
+            console.warn('Socket.IO terputus!');
+            koneksiStatusText.textContent = 'Terputus';
+            koneksiStatusText.className = 'text-3xl font-bold text-red-600';
+            koneksiStatusDesc.textContent = 'Mencoba menyambungkan ulang...';
+            koneksiStatusIconBg.className = 'bg-red-500 p-3 rounded-xl shadow-lg';
+            koneksiStatusIcon.className = 'fas fa-wifi-slash text-white text-xl';
+            addNotification('error', 'Koneksi Terputus', 'Koneksi real-time ke server terputus.');
+        });
+
+        // === 7. JALANKAN FUNGSI AWAL ===
+        updateUsername();
+        loadChartHistory();
+        
+    });
     </script>
+
 </body>
 </html>

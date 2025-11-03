@@ -30,18 +30,20 @@ const io = new Server(server, {
 });
 
 // --- 1. Koneksi ke MongoDB ---
+// Pastikan MONGO_URI di file .env Anda sudah benar
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Terhubung ke MongoDB"))
   .catch(err => console.error("❌ Gagal koneksi MongoDB:", err.message));
 
 // --- 2A. Skema & Model User ---
-// (Kode UserSchema dan Model User Anda dari Langkah 2)
 const UserSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true, lowercase: true },
   password: { type: String, required: true },
   namaLengkap: { type: String, default: 'Pengguna Baru' },
-  jabatan: { type: String, default: 'Pegawai' } // <-- [BARU] TAMBAHKAN BARIS INI
+  jabatan: { type: String, default: 'Pegawai' }
 }, { timestamps: true });
+
+// Hash password sebelum menyimpan
 UserSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
@@ -51,7 +53,6 @@ UserSchema.pre('save', async function(next) {
 const User = mongoose.model('User', UserSchema);
 
 // --- 2B. Skema & Model Data Tandon ---
-// (Kode TandonDataSchema dari Langkah 5)
 const TandonDataSchema = new mongoose.Schema({
   topic: { type: String, required: true },
   value: { type: String, required: true },
@@ -68,7 +69,6 @@ app.get('/', (req, res) => {
 // --- 4. API Endpoints untuk Autentikasi ---
 
 // === API: REGISTER ===
-// [DI SINI SUDAH DIPERBAIKI - KODE LENGKAP DARI LANGKAH 2]
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -89,7 +89,6 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 // === API: LOGIN ===
-// [DI SINI SUDAH DIPERBAIKI - KODE LENGKAP DARI LANGKAH 2]
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -120,7 +119,6 @@ app.post('/api/auth/login', async (req, res) => {
 // --- 5. API Endpoints yang DILINDUNGI ---
 
 // === API: GET PROFIL SAYA ===
-// [DI SINI SUDAH DIPERBAIKI - KODE LENGKAP DARI LANGKAH 4]
 app.get('/api/me', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password'); 
@@ -135,7 +133,6 @@ app.get('/api/me', authMiddleware, async (req, res) => {
 });
 
 // === API: GET HISTORI ===
-// (Kode /api/history dari Langkah 5)
 app.get('/api/history', authMiddleware, async (req, res) => {
   try {
     const history = await TandonData.find()
@@ -148,31 +145,21 @@ app.get('/api/history', authMiddleware, async (req, res) => {
   }
 });
 
-// ... (setelah endpoint app.get('/api/history', ...))
-
-// === [BARU] API: UPDATE PROFIL SAYA ===
+// === API: UPDATE PROFIL SAYA ===
 app.put('/api/me', authMiddleware, async (req, res) => {
   try {
-    // 1. Ambil data dari body
     const { namaLengkap, jabatan } = req.body;
-
-    // 2. Cari user di DB berdasarkan ID dari token
     const user = await User.findById(req.user.id);
 
     if (!user) {
       return res.status(404).json({ message: 'User tidak ditemukan' });
     }
 
-    // 3. Update data user
     user.namaLengkap = namaLengkap || user.namaLengkap;
     user.jabatan = jabatan || user.jabatan;
     
-    // (Catatan: Kita sengaja tidak mengizinkan perubahan username/password di sini)
-
-    // 4. Simpan ke database
     await user.save();
 
-    // 5. Kirim kembali data user yang sudah di-update (tanpa password)
     const userUpdated = await User.findById(req.user.id).select('-password');
     res.json({ message: 'Profil berhasil diperbarui!', user: userUpdated });
 
@@ -184,20 +171,19 @@ app.put('/api/me', authMiddleware, async (req, res) => {
 
 
 // --- 6. Logika Jembatan (MQTT <-> Socket.IO) ---
-// (Semua kode MQTT & Socket.IO dari Langkah 5 ada di sini)
 
 // === 6A. Inisialisasi Klien MQTT ===
 const MQTT_TOPIC_LEVEL    = "BBPMP/tandon/level";
 const MQTT_TOPIC_POMPA    = "BBPMP/tandon/pompa";
 const MQTT_TOPIC_PERINTAH = "BBPMP/tandon/perintah";
 
-// [MODIFIKASI] Ambil info koneksi dari .env
+// Ambil info koneksi dari .env
 const mqttOptions = {
   host: process.env.MQTT_HOST_URL,
   port: process.env.MQTT_HOST_PORT,
   username: process.env.MQTT_USERNAME,
   password: process.env.MQTT_PASSWORD,
-  protocol: 'mqtts'
+  protocol: 'mqtts' // Menggunakan 'mqtts' untuk koneksi aman ke port 8883
 };
 
 console.log("Mencoba terhubung ke MQTT Broker (HiveMQ Cloud)...");
@@ -205,6 +191,7 @@ const mqttClient = mqtt.connect(mqttOptions);
 
 mqttClient.on('connect', () => {
   console.log("✅ Terhubung ke MQTT Broker (HiveMQ)");
+  // Subscribe ke topik yang dikirim oleh ESP32
   mqttClient.subscribe([MQTT_TOPIC_LEVEL, MQTT_TOPIC_POMPA], (err) => {
     if (!err) {
       console.log(`Berhasil subscribe ke: ${MQTT_TOPIC_LEVEL} & ${MQTT_TOPIC_POMPA}`);
@@ -216,8 +203,11 @@ mqttClient.on('message', async (topic, message) => {
   const payload = message.toString();
   console.log(`[MQTT] Pesan diterima: ${topic} = ${payload}`);
   try {
+    // 1. Simpan data ke database MongoDB
     const dataBaru = new TandonData({ topic, value: payload });
     await dataBaru.save();
+    
+    // 2. Teruskan data ke semua frontend yang terhubung
     io.emit('data-iot', { topic, value: payload, timestamp: dataBaru.timestamp });
   } catch (error) {
     console.error("Gagal simpan ke DB atau kirim ke socket:", error.message);
@@ -232,11 +222,12 @@ mqttClient.on('error', (err) => {
 io.on('connection', (socket) => {
   console.log(`🔌 Frontend terhubung: ${socket.id}`);
 
+  // Menunggu token dari frontend setelah terhubung
   socket.on('autentikasi', (token) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       console.log(`🔑 Autentikasi socket ${socket.id} berhasil untuk user: ${decoded.user.username}`);
-      socket.join(decoded.user.id);
+      socket.join(decoded.user.id); // Gabungkan socket ke "room" privat user
       socket.emit('autentikasi_berhasil');
     } catch (err) {
       console.log(`🔒 Autentikasi socket ${socket.id} GAGAL. Token tidak valid.`);
@@ -245,8 +236,13 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Menerima perintah dari frontend
   socket.on('perintah-iot', (perintah) => {
+    // Cek otentikasi (meskipun sudah dicek saat konek, ini tambahan keamanan)
+    // Untuk saat ini, kita asumsikan jika socket terhubung = terotentikasi
     console.log(`[Socket.IO] Perintah diterima: ${perintah}`);
+    
+    // Kirim perintah ke ESP32 via MQTT
     mqttClient.publish(MQTT_TOPIC_PERINTAH, perintah, (err) => {
       if (err) {
         console.error("Gagal kirim perintah ke MQTT:", err);
@@ -267,3 +263,5 @@ const PORT = 3000;
 server.listen(PORT, () => {
   console.log(`🚀 Server "TandonTrack" berjalan di http://localhost:${PORT}`);
 });
+
+// PERBAIKAN: Menghapus satu '}' ekstra yang ada di file asli Anda

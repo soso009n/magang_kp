@@ -3,15 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TandonTrack - Index</title>
+    
+    <!-- [PERBARUAN] Skrip untuk auto-redirect jika sudah login -->
+    <script>
+        const token = localStorage.getItem('token');
+        if (token) {
+            // Jika token ditemukan, pengguna sudah login.
+            // Langsung arahkan ke dashboard.
+            window.location.href = '/dashboard.html';
+        }
+    </script>
+    
+    <title>TandonTrack - Selamat Datang</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body {
+            /* Menggunakan font-family 'Inter' dan font-weight normal. 
+               Menghapus 'font-weight: bold !important;' agar teks terlihat lebih profesional.
+            */
             font-family: 'Inter', sans-serif;
-            font-weight: bold !important;
         }
+        
+        /* Style .input-field dan .password-container tidak digunakan di halaman ini, 
+           jadi bisa dihapus agar kode lebih bersih.
+           Namun, saya membiarkannya jika Anda berencana menggunakannya nanti.
+        */
         .input-field {
             border-bottom: 1px solid #D1D5DB;
             transition: border-color 0.3s;
@@ -36,32 +54,36 @@
         .toggle-password:hover {
             color: #4B5563;
         }
-        
-        /* * Aturan CSS yang berkonflik (a {...} dan button {...}) 
-         * sudah dihapus agar tidak mengganggu Tailwind.
-        */
-        
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex items-center justify-center flex-col">
+    
+    <!-- Icon/Logo Aplikasi -->
     <img src="./icon.png" class="w-[200px] h-[200px] object-contain">
+    
+    <!-- Kontainer Tombol -->
     <div class="rounded-lg p-12 w-full max-w-md" style="margin-top: -70px;">
-            <div class="flex justify-center gap-2">
+          <div class="flex flex-col sm:flex-row justify-center gap-4">
                 
+                <!-- Tombol Login -->
                 <a 
                     href="./login.html"
-                    class="w-[150px] px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition text-center"
-                >
+                    class="w-full sm:w-[150px] px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-100 transition text-center shadow-sm">
                     Login
                 </a>
                 
+                <!-- Tombol Register -->
                 <a 
                     href="./register.html" 
-                    class="w-[150px] px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-center"
-                >
+                    class="w-full sm:w-[150px] px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-center shadow-lg hover:shadow-blue-300">
                     Register
                 </a>
-            </div>
-        </div>
+          </div>
+    </div>
+
+    <p class="text-gray-500 text-sm mt-8 absolute bottom-10">
+        &copy; 2024 TandonTrack. All rights reserved.
+    </p>
+
 </body>
 </html>

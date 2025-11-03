@@ -11,21 +11,57 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        /* (Semua style CSS Anda dari file profil/tentang) */
-        body { font-family: 'Poppins', sans-serif; background-color: #f0f9ff; }
-        .sidebar-link { transition: all 0.3s ease; }
-        .sidebar-link:hover { background-color: rgba(59, 130, 246, 0.1); }
-        .sidebar-link.active { background-color: #3b82f6; color: white; }
+        /* Style kustom untuk UI yang konsisten */
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background-color: #f0f9ff; 
+        }
+        .sidebar-link { 
+            transition: all 0.3s ease; 
+        }
+        .sidebar-link:hover { 
+            background-color: rgba(59, 130, 246, 0.1); 
+        }
+        .sidebar-link.active { 
+            background-color: #3b82f6; 
+            color: white; 
+        }
         
-        /* Style untuk tabel histori Anda */
-        .history-table { width: 100%; border-collapse: collapse; }
-        .history-table th, .history-table td { padding: 12px 16px; border-bottom: 1px solid #e5e7eb; text-align: left; }
-        .history-table th { background-color: #f9fafb; font-weight: 600; color: #374151; }
-        .history-table tr:last-child td { border-bottom: none; }
-        .badge { padding: 4px 8px; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
-        .badge-green { background-color: #d1fae5; color: #065f46; }
-        .badge-red { background-color: #fee2e2; color: #991b1b; }
+        /* Style kustom untuk tabel histori */
+        .history-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+        }
+        .history-table th, .history-table td { 
+            padding: 12px 16px; 
+            border-bottom: 1px solid #e5e7eb; 
+            text-align: left; 
+        }
+        .history-table th { 
+            background-color: #f9fafb; 
+            font-weight: 600; 
+            color: #374151; 
+        }
+        .history-table tr:last-child td { 
+            border-bottom: none; 
+        }
+        .badge { 
+            padding: 4px 10px; 
+            border-radius: 9999px; 
+            font-size: 0.8rem; 
+            font-weight: 600; 
+            text-transform: uppercase;
+        }
+        .badge-green { 
+            background-color: #d1fae5; 
+            color: #065f46; 
+        }
+        .badge-red { 
+            background-color: #fee2e2; 
+            color: #991b1b; 
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -39,32 +75,32 @@
                     <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzNmODNmOCI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MyLjY3IDAgOCAyLjEzIDggN3MtNS4zMyA3LTggNy04LTIuMTMtOC03IDUuMzMtNyA4LTd6Ii8+PC9zdmc+" alt="Admin" class="w-12 h-12 rounded-full border-2 border-blue-500">
                     <div class="ml-3">
                         <p class="text-sm font-medium text-gray-700">Selamat Datang,</p>
-                        <p class="text-sm font-bold text-gray-900">Admin</p>
+                        <p class="text-sm font-bold text-gray-900" id="sidebar-username">Admin</p>
                     </div>
                 </div>
                 
                  <nav>
-                    <a href="./dashboard.html" class="sidebar-link flex items-center p-3 mb-2 rounded-lg">
-                        <i class="fas fa-tachometer-alt w-6"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="./history.html" class="sidebar-link active flex items-center p-3 mb-2 rounded-lg"> <i class="fas fa-history w-6"></i>
-                        <span>History</span>
-                    </a>
-                    <a href="./tentang.html" class="sidebar-link flex items-center p-3 mb-2 rounded-lg">
-                        <i class="fas fa-info-circle w-6"></i>
-                        <span>Tentang</span>
-                    </a>
-                    <a href="./profil.html" class="sidebar-link flex items-center p-3 mb-2 rounded-lg">
-                        <i class="fas fa-user w-6"></i>
-                        <span>Profil</span>
-                    </a>
-                </nav>
+                     <a href="./dashboard.html" class="sidebar-link flex items-center p-3 mb-2 rounded-lg">
+                         <i class="fas fa-tachometer-alt w-6"></i>
+                         <span>Dashboard</span>
+                     </a>
+                     <a href="./history.html" class="sidebar-link active flex items-center p-3 mb-2 rounded-lg"> <i class="fas fa-history w-6"></i>
+                         <span>History</span>
+                     </a>
+                     <a href="./tentang.html" class="sidebar-link flex items-center p-3 mb-2 rounded-lg">
+                         <i class="fas fa-info-circle w-6"></i>
+                         <span>Tentang</span>
+                     </a>
+                     <a href="./profil.html" class="sidebar-link flex items-center p-3 mb-2 rounded-lg">
+                         <i class="fas fa-user w-6"></i>
+                         <span>Profil</span>
+                     </a>
+                 </nav>
             </div>
             
             <div class="absolute bottom-0 w-64 p-4 border-t border-gray-200">
-                <button id="logout-button" class="flex items-center text-gray-600 hover:text-gray-900">
-                    <i class="fas fa-sign-out-alt mr-2"></i>
+                <button id="logout-button" class="flex items-center text-gray-600 hover:text-gray-900 w-full p-3 rounded-lg hover:bg-gray-100">
+                    <i class="fas fa-sign-out-alt mr-2 w-6 text-center"></i>
                     <span>Logout</span>
                 </button>
             </div>
@@ -98,7 +134,7 @@
         </div>
     </div>
     
-    <script src="./chart.js"></script> <script>
+    <script>
         // Ambil token (penjaga keamanan)
         const token = localStorage.getItem('token');
         const username = localStorage.getItem('username'); // Ambil username juga
@@ -109,10 +145,10 @@
             window.location.href = '/login.html';
         }
 
-        // --- [PERBAIKAN 3] Menambahkan Fungsi Logout ---
+        // Fungsi Logout
         const logoutButton = document.getElementById('logout-button');
         logoutButton.addEventListener('click', () => {
-            localStorage.clear();
+            localStorage.clear(); // Hapus semua data (token, username)
             window.location.href = '/login.html';
         });
 
@@ -121,22 +157,24 @@
             fetchHistoryData();
             // Update username di sidebar
             if(username) {
-                 document.querySelectorAll('.text-sm.font-bold.text-gray-900').forEach(el => el.textContent = username);
+                 document.getElementById('sidebar-username').textContent = username;
             }
         });
 
-        // Ini adalah fungsi fetch Anda yang sudah BENAR
+        // Fungsi untuk mengambil data histori dari API
         async function fetchHistoryData() {
             const tableBody = document.getElementById('history-table-body');
             tableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4">Memuat data histori...</td></tr>';
 
             try {
                 // 1. Panggil API backend KITA (dengan token)
-                const response = await fetch('http://localhost:3000/api/history', {
+                const response = await fetch('/api/history', { // Gunakan path relatif
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-auth-token': token // [PENTING] Kirim token untuk autentikasi
+                        // === PERBAIKAN PENTING ===
+                        // Menggunakan format 'Authorization: Bearer' agar sesuai dengan authMiddleware.js
+                        'Authorization': `Bearer ${token}`
                     }
                 });
                 
@@ -149,7 +187,7 @@
                 }
 
                 if (!response.ok) {
-                    throw new Error('Gagal mengambil data dari server');
+                    throw new Error(`Gagal mengambil data: ${response.statusText}`);
                 }
                 
                 const data = await response.json(); // data = [ { topic, value, timestamp }, ... ]
@@ -165,7 +203,7 @@
                 // 2. Loop data dan masukkan ke tabel
                 data.forEach(record => {
                     const tr = document.createElement('tr');
-                    tr.classList.add('border-b'); 
+                    tr.classList.add('hover:bg-gray-50'); 
                     
                     const ts = new Date(record.timestamp);
                     // Format 'id-ID' untuk Tanggal & Jam Indonesia
@@ -174,7 +212,7 @@
                     let dataPoin = record.topic;
                     let nilai = record.value;
                     
-                    // Buat lebih mudah dibaca
+                    // Buat lebih mudah dibaca (sesuai dengan topik di esp32.ino)
                     if (record.topic === 'BBPMP/tandon/level') {
                         dataPoin = 'Level Air Tandon';
                         nilai = `${record.value} %`;

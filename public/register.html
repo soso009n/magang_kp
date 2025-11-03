@@ -3,42 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <script>
+        const token = localStorage.getItem('token');
+        if (token) {
+            // Jika token ditemukan, pengguna sudah login.
+            // Langsung arahkan ke dashboard.
+            window.location.href = '/dashboard.html';
+        }
+    </script>
+    
     <title>TandonTrack - Register</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif; font-weight: bold !important; }
-        .input-field { border-bottom: 1px solid #D1D5DB; transition: border-color 0.3s; background: white !important; border-radius: 10px; }
-        .input-field:focus { outline: none; border-bottom-color: #3B82F6; }
-        .password-container { position: relative; }
-        .toggle-password { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #6B7280; }
-        .toggle-password:hover { color: #4B5563; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            /* [PERBAIKAN] Dihapus font-weight: bold */
+        }
+        .input-field { 
+            border-bottom: 1px solid #D1D5DB; 
+            transition: border-color 0.3s; 
+            background: white !important; 
+            border-radius: 10px; 
+        }
+        .input-field:focus { 
+            outline: none; 
+            border-bottom-color: #3B82F6; 
+        }
+        .password-container { 
+            position: relative; 
+        }
+        .toggle-password { 
+            position: absolute; 
+            right: 10px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            cursor: pointer; 
+            color: #6B7280; 
+        }
+        .toggle-password:hover { 
+            color: #4B5563; 
+        }
         
-        /* [PERBAIKAN] Aturan global 'button' yang berkonflik telah dihapus dari sini */
-
-        /* [BARU] Style untuk pesan status */
-        #status-message.success { color: #155724; /* Hijau */ }
-        #status-message.error { color: #721c24; /* Merah */ }
+        /* Style untuk pesan status */
+        #status-message.success { 
+            color: #155724; /* Hijau */ 
+        }
+        #status-message.error { 
+            color: #721c24; /* Merah */ 
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen flex items-center justify-center flex-col">
-    <img src="./icon.png" class="w-[150px] h-[150px] object-cover">
-    <div class="bg-[#4FC3F7] rounded-lg shadow-md p-12 w-full max-w-md">
-        <h2 class="text-xl font-medium text-gray-700 mb-6">Register Account</h2>
+    <img src="./icon.png" class="w-[150px] h-[150px] object-contain">
+    
+    <div class="bg-white rounded-lg shadow-xl p-8 sm:p-12 w-full max-w-md">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Register Account</h2>
         
         <form id="register-form">
             <div class="mb-6">
-                <label class="block text-gray-600 mb-2">Username</label>
+                <label class="block text-gray-700 mb-2 font-semibold">Username</label>
                 <div class="flex items-center">
-                    <input type="text" id="username" class="input-field w-full py-2 px-3 bg-transparent" placeholder="@username" required>
+                    <input type="text" id="username" class="input-field w-full py-2 px-3 shadow-inner" placeholder="@username" required>
                 </div>
             </div>
             
-            <div class="mb-8">
-                <label class="block text-gray-600 mb-2">Password</label>
+            <div class="mb-6">
+                <label class="block text-gray-700 mb-2 font-semibold">Password</label>
                 <div class="password-container">
-                    <input type="password" id="password" class="input-field w-full py-2 px-3 bg-transparent pr-8" placeholder="••••••••••" required>
+                    <input type="password" id="password" class="input-field w-full py-2 px-3 pr-8 shadow-inner" placeholder="••••••••••" required>
                     <span class="toggle-password" id="togglePassword">
                         <i class="far fa-eye"></i>
                     </span>
@@ -46,22 +81,26 @@
             </div>
             
             <div class="mb-6 text-sm text-right">
-                <span class="text-gray-500">Already have an account?</span>
-                <a href="./login.html" class="text-blue-500 hover:underline">Register</a>
+                <span class="text-gray-600">Already have an account?</span>
+                <a href="./login.html" class="text-blue-600 hover:underline font-medium">Login</a>
             </div>
             
-            <div class="flex justify-between">
-                 <button type="button" id="cancelBtn" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition">
-                    Cancel
-                </button>
-                 <button type="submit" id="register-button" class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+            <div class="flex flex-col gap-3">
+                <button type="submit" id="register-button" class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition shadow-lg hover:shadow-blue-300">
                     Register
                 </button>
+                 <button type="button" id="cancelBtn" class="w-full px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition">
+                    Cancel
+                </button>
             </div>
             
-            <p id="status-message" class="text-center mt-4"></p>
+            <p id="status-message" class="text-center mt-4 font-medium"></p>
         </form>
     </div>
+
+    <p class="text-gray-500 text-sm mt-8 absolute bottom-10">
+        &copy; 2024 TandonTrack. All rights reserved.
+    </p>
 
     <script>
         const form = document.getElementById('register-form');
@@ -78,12 +117,14 @@
 
             // 1. Tampilkan status loading
             statusMessage.textContent = 'Mendaftarkan...';
-            statusMessage.className = '';
+            statusMessage.className = 'text-gray-600'; // Warna netral
             registerButton.disabled = true;
+            registerButton.textContent = 'Loading...';
 
             try {
                 // 2. Kirim data ke API Backend
-                const response = await fetch('http://localhost:3000/api/auth/register', {
+                // [PERBARUAN] Menggunakan path relatif agar berfungsi di hosting
+                const response = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -105,6 +146,7 @@
                 statusMessage.textContent = data.message;
                 statusMessage.className = 'success';
                 registerButton.disabled = false;
+                registerButton.textContent = 'Register';
                 
                 // Kosongkan form
                 usernameInput.value = '';
@@ -120,6 +162,7 @@
                 statusMessage.textContent = error.message;
                 statusMessage.className = 'error';
                 registerButton.disabled = false;
+                registerButton.textContent = 'Register';
             }
         });
         
@@ -127,6 +170,7 @@
         document.getElementById('cancelBtn').addEventListener('click', function() {
             usernameInput.value = '';
             passwordInput.value = '';
+            statusMessage.textContent = '';
         });
 
         const togglePassword = document.getElementById('togglePassword');
