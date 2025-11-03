@@ -48,7 +48,7 @@ const char* mqtt_password = "GibsonMQTT123"; //
 // === HC-SR04 Config ===
 #define TRIGGER_PIN 5 //
 #define ECHO_PIN 18 //
-#define MAX_DISTANCE 200 //
+#define MAX_DISTANCE 20 //
 
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
 

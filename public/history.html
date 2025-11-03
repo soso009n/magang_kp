@@ -14,19 +14,29 @@
     
     <style>
         /* Style kustom untuk UI yang konsisten */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
         body { 
             font-family: 'Poppins', sans-serif; 
-            background-color: #f0f9ff; 
+            background-color: #f4f7f6; /* Latar belakang konsisten */
+        }
+        .sidebar {
+            background-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
         .sidebar-link { 
             transition: all 0.3s ease; 
+            color: #4b5563;
+            border-radius: 8px;
         }
         .sidebar-link:hover { 
-            background-color: rgba(59, 130, 246, 0.1); 
+            background-color: rgba(59, 130, 246, 0.05); 
+            color: #2563eb;
+            transform: translateX(4px);
         }
         .sidebar-link.active { 
             background-color: #3b82f6; 
             color: white; 
+            box-shadow: 0 4px 10px -1px rgba(59, 130, 246, 0.3), 0 2px 6px -2px rgba(59, 130, 246, 0.2);
         }
         
         /* Style kustom untuk tabel histori */
@@ -43,6 +53,9 @@
             background-color: #f9fafb; 
             font-weight: 600; 
             color: #374151; 
+        }
+        .history-table tr:hover {
+            background-color: #f9fafb;
         }
         .history-table tr:last-child td { 
             border-bottom: none; 
@@ -66,13 +79,13 @@
 </head>
 <body class="bg-gray-100">
     <div class="flex h-screen bg-gray-100">
-        <div class="w-64 bg-white shadow-md">
+        <div class="w-64 bg-white shadow-md flex-shrink-0">
             <div class="p-4 bg-blue-600">
                 <h1 class="text-white text-xl font-bold">Monitoring Tandon</h1>
             </div>
             <div class="p-4">
                 <div class="flex items-center mb-6">
-                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzNmODNmOCI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MyLjY3IDAgOCAyLjEzIDggN3MtNS4zMyA3LTggNy04LTIuMTMtOC03IDUuMzMtNyA4LTd6Ii8+PC9zdmc+" alt="Admin" class="w-12 h-12 rounded-full border-2 border-blue-500">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzNmODNmOCI+PHBhdGggZD0iTTEyIDJDNi44MiAyIDIgNi44MiAyIDEyczQuODIgMTAgMTAgMTAgMTAtNC44MiAxMC0xMFMxNy4xOCAyIDEyIDJ6bTAgMThjLTQuNDEgMC04LTMuNTktOC04czMuNTktOCA4IDggOCA0IDggOHoiLz48cGF0aCBkPSJtMTIgNmEzIDMgMCAxIDAgMCA2IDMgMyAwIDAgMCAwLTZ6bTAtMmMxLjY2IDAgMyAxLjM0IDMgM3MtMS4zNCAzLTMgMy0zLTEuMzQtMy0zIDEuMzQtMyAzLTN6Ii8+PC9zdmc+" alt="Admin" class="w-12 h-12 rounded-full border-2 border-blue-500 p-1">
                     <div class="ml-3">
                         <p class="text-sm font-medium text-gray-700">Selamat Datang,</p>
                         <p class="text-sm font-bold text-gray-900" id="sidebar-username">Admin</p>
@@ -81,33 +94,33 @@
                 
                  <nav>
                      <a href="./dashboard.html" class="sidebar-link flex items-center p-3 mb-2 rounded-lg">
-                         <i class="fas fa-tachometer-alt w-6"></i>
-                         <span>Dashboard</span>
+                         <i class="fas fa-tachometer-alt w-6 text-center"></i>
+                         <span class="ml-3">Dashboard</span>
                      </a>
-                     <a href="./history.html" class="sidebar-link active flex items-center p-3 mb-2 rounded-lg"> <i class="fas fa-history w-6"></i>
-                         <span>History</span>
+                     <a href="./history.html" class="sidebar-link active flex items-center p-3 mb-2 rounded-lg"> <i class="fas fa-history w-6 text-center"></i>
+                         <span class="ml-3">History</span>
                      </a>
                      <a href="./tentang.html" class="sidebar-link flex items-center p-3 mb-2 rounded-lg">
-                         <i class="fas fa-info-circle w-6"></i>
-                         <span>Tentang</span>
+                         <i class="fas fa-info-circle w-6 text-center"></i>
+                         <span class="ml-3">Tentang</span>
                      </a>
                      <a href="./profil.html" class="sidebar-link flex items-center p-3 mb-2 rounded-lg">
-                         <i class="fas fa-user w-6"></i>
-                         <span>Profil</span>
+                         <i class="fas fa-user w-6 text-center"></i>
+                         <span class="ml-3">Profil</span>
                      </a>
                  </nav>
             </div>
             
             <div class="absolute bottom-0 w-64 p-4 border-t border-gray-200">
-                <button id="logout-button" class="flex items-center text-gray-600 hover:text-gray-900 w-full p-3 rounded-lg hover:bg-gray-100">
-                    <i class="fas fa-sign-out-alt mr-2 w-6 text-center"></i>
+                <button id="logout-button" class="sidebar-link flex items-center p-3 w-full">
+                    <i class="fas fa-sign-out-alt mr-3 w-6 text-center"></i>
                     <span>Logout</span>
                 </button>
             </div>
         </div>
         
         <div class="flex-1 overflow-y-auto">
-            <header class="bg-white shadow-sm">
+            <header class="bg-white shadow-sm sticky top-0 z-10">
                 <div class="flex justify-between items-center px-6 py-4">
                     <h1 class="text-2xl font-bold text-gray-800">History Log</h1>
                 </div>
@@ -145,7 +158,7 @@
             window.location.href = '/login.html';
         }
 
-        // Fungsi Logout
+        // --- Fungsi Logout ---
         const logoutButton = document.getElementById('logout-button');
         logoutButton.addEventListener('click', () => {
             localStorage.clear(); // Hapus semua data (token, username)
@@ -164,16 +177,17 @@
         // Fungsi untuk mengambil data histori dari API
         async function fetchHistoryData() {
             const tableBody = document.getElementById('history-table-body');
-            tableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4">Memuat data histori...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-500">Memuat data histori...</td></tr>';
 
             try {
                 // 1. Panggil API backend KITA (dengan token)
-                const response = await fetch('/api/history', { // Gunakan path relatif
+                // [PERBAIKAN] Menggunakan path relatif
+                const response = await fetch('/api/history', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        // === PERBAIKAN PENTING ===
-                        // Menggunakan format 'Authorization: Bearer' agar sesuai dengan authMiddleware.js
+                        // [PERBAIKAN] Menggunakan format 'Authorization: Bearer'
+                        // agar sesuai dengan authMiddleware.js
                         'Authorization': `Bearer ${token}`
                     }
                 });
@@ -196,7 +210,7 @@
                 tableBody.innerHTML = '';
 
                 if (data.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4">Belum ada data histori.</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="3" class="text-center p-4 text-gray-500">Belum ada data histori.</td></tr>';
                     return;
                 }
 
@@ -212,7 +226,7 @@
                     let dataPoin = record.topic;
                     let nilai = record.value;
                     
-                    // Buat lebih mudah dibaca (sesuai dengan topik di esp32.ino)
+                    // Buat lebih mudah dibaca (sesuai dengan topik di server.js)
                     if (record.topic === 'BBPMP/tandon/level') {
                         dataPoin = 'Level Air Tandon';
                         nilai = `${record.value} %`;
