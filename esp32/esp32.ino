@@ -27,12 +27,13 @@ const char* ssid = "Mine"; //
 const char* password = "war54321"; //
 
 // --- 2. Telegram Config ---
-#define BOT_TOKEN "7856630661:AAHHn91BwTuKlY9spo33o_8QLV0WXph_pTw" //
+#define BOT_TOKEN "8356921118:AAH2tjZBqrKvkGi5lFoXAn2kGc9HNNhRfNc" //
 #define CHAT_ID "5554591008" //
+#define CHAT_ID "5091711226"
 
 // --- 3. MQTT Config (SESUAI DENGAN .env DAN server.js) ---
 // [PERBAIKAN] URL ini disamakan dengan .env (98ed... bukan 98e9...)
-const char* mqtt_server   = "98ed932c5d46439b91e60d6c180017a5.s1.eu.hivemq.cloud"; //
+const char* mqtt_server   = "2593311dc61341329b37fda0471abee1.s1.eu.hivemq.cloud"; //
 const int   mqtt_port     = 8883; //
 const char* mqtt_user     = "backend_server"; //
 const char* mqtt_password = "GibsonMQTT123"; //
@@ -292,4 +293,4 @@ int hitungLevel(int distance) {
   else if (persentase >= 40) return 50;
   else if (persentase >= 15) return 25;
   else return 0; //
-}y
+}
